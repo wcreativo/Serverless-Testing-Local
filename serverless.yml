@@ -1,0 +1,48 @@
+service: users
+frameworkVersion: '3'
+
+plugins:
+  - serverless-python-requirements
+  - serverless-dynamodb
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: python3.10
+  region: us-east-2
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+  dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+
+functions:
+  users:
+    handler: handler.get_users
+    events:
+      - httpApi:
+          method: GET
+          path: /users
+
+resources:
+  Resources:
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: usersTable
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
